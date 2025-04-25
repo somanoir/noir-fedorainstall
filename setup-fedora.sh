@@ -76,12 +76,15 @@ packages_common_wayland=(
 
 packages_hyprland=(
   "hyprland"
+  "hyprland-devel"
   "hyprutils"
   "hyprpicker"
   "hyprpolkitagent"
   "hyprshot"
   "xdg-desktop-portal-hyprland"
   "hyprlock"
+  "aquamarine"
+  "aquamarine-devel"
   "pyprland"
   "uwsm"
   )
