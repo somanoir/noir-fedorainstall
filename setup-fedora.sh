@@ -1,23 +1,13 @@
 # Install required packages
-_installPackages() {
-    toInstall=()
-    for pkg; do
-        if [[ $(_isInstalled "${pkg}") == 0 ]]; then
-            echo "${pkg} is already installed."
-            continue
-        fi
-        toInstall+=("${pkg}")
-    done
-    if [[ "${toInstall[@]}" == "" ]]; then
-        # echo "All dnf packages are already installed.";
-        return
-    fi
-    printf "Package not installed:\n%s\n" "${toInstall[@]}"
-    sudo dnf install --assumeyes "${toInstall[@]}"
+installPackages() {
+  for pkg; do
+    sudo dnf install --assumeyes "${pkg}"
+  done
 }
 
 packages_common_utils=(
   "git"
+  "git-lfs"
   "wget"
   "unzip"
   "rsync"
@@ -27,6 +17,7 @@ packages_common_utils=(
   "uv"
   "golang"
   "rustup"
+  "podman"
   "pkgconf-pkg-config"
   "stow"
   "nwg_look"
@@ -35,6 +26,7 @@ packages_common_utils=(
   "zoxide"
   "lsd"
   "bat"
+  "cava"
   "brightnessctl"
   "playerctl"
   "pavucontrol"
@@ -48,51 +40,65 @@ packages_common_utils=(
   "bluez"
   "blueman"
   "lm_sensors"
-)
+  "yt-dlp"
+  "tela-icon-theme"
+  "tealdeer"
+  "ark"
+  "umu-launcher"
+  )
 
 packages_common_x11=(
   "gnome-session-xsession"
   "xorg-x11-xinit-session"
+  "dex-autostart"
   "xdotool"
   "xclip"
+  "cliphist"
   "xinput"
   "rofi"
   "polybar"
   "dunst"
   "feh"
   "maim"
-)
+  )
 
 packages_common_wayland=(
   "qt5-qtwayland"
   "qt6-qtwayland"
   "wlogout"
+  "wl-clipboard"
   "copyq"
   "wofi"
   "waybar"
   "mako"
   "swww"
-)
+  )
 
 packages_hyprland=(
   "hyprland"
+  "hyprutils"
   "hyprpicker"
-  "pyprland"
   "hyprpolkitagent"
   "hyprshot"
   "xdg-desktop-portal-hyprland"
   "hyprlock"
-)
+  "pyprland"
+  "uwsm"
+  )
 
 packages_niri=(
   "niri"
   "xwayland-satellite"
   "xdg-desktop-portal-gnome"
-)
+  )
 
 packages_awesome=(
   "awesome"
-)
+  )
+
+packages_i3=(
+  "i3"
+  )
 
 packages_apps=(
   "ghostty"
@@ -115,23 +121,31 @@ packages_apps=(
   "ImageMagick"
   "qbittorrent"
   "keepassxc"
-)
+  "calibre"
+  "discord"
+  )
 
 packages_fonts=(
   "maple-fonts"
   "nerd-fonts"
   "mozilla-fira-sans-fonts"
   "fontawesome-6-free-fonts"
-)
+  )
 
 install_flatpaks () {
+  flatpak install flathub com.github.tchx84.Flatseal
   flatpak install flathub de.haeckerfelix.Shortwave
   flatpak install flathub com.valvesoftware.Steam
   flatpak install flathub io.gitlab.librewolf-community
+  flatpak install flathub md.obsidian.Obsidian
 }
 
 install_misc () {
+  # RMPC Music player
   cargo install --git https://github.com/mierak/rmpc --locked
+
+  # Ollama
+  curl -fsSL https://ollama.com/install.sh | sh
 }
 
 setup_repos () {
@@ -195,11 +209,26 @@ echo ":: Setting up repositories..."
 setup_repos
 
 # Tweak DNF config
-sudo cat > /etc/dnf/dnf.conf <<EOF
-fastestmirror=True
+sudo -i -u root /bin/bash <<EOF
+echo "fastestmirror=True
 max_parallel_downloads=10
 defaultyes=True
 keepcache=True
+skip_if_unavailable=True" >> /etc/dnf/dnf.conf
+EOF
+
+# Fix laptop lid acting like airplane mode key
+sudo -i -u root /bin/bash <<EOF
+mkdir /etc/rc.d
+echo "#!/usr/bin/env bash
+# Fix laptop lid acting like airplane mode key
+setkeycodes d7 240
+setkeycodes e058 142" > /etc/rc.d/rc.local
+EOF
+
+# Disable password prompt for sudo commands
+sudo -i -u root /bin/bash <<EOF
+  echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel
 EOF
 
 # Change Hostname
@@ -213,21 +242,21 @@ sudo dnf update -y
 
 # Install required packages
 echo ":: Installing required utilities..."
-_installPackages "${packages_common_utils[@]}"
-_installPackages "${packages_common_x11[@]}"
-_installPackages "${packages_common_wayland[@]}"
+installPackages "${packages_common_utils[@]}"
+installPackages "${packages_common_x11[@]}"
+installPackages "${packages_common_wayland[@]}"
 
 # Install window managers
 echo ":: Installing window managers..."
-_installPackages "${packages_hyprland[@]}"
-_installPackages "${packages_niri[@]}"
-_installPackages "${packages_awesome[@]}"
+installPackages "${packages_hyprland[@]}"
+installPackages "${packages_niri[@]}"
+installPackages "${packages_awesome[@]}"
 
 # Install fonts and apps
 echo ":: Installing fonts..."
-_installPackages "${packages_fonts[@]}"
+installPackages "${packages_fonts[@]}"
 echo ":: Installing applications..."
-_installPackages "${packages_apps[@]}"
+installPackages "${packages_apps[@]}"
 
 # Setup rust
 rustup-init
@@ -247,6 +276,9 @@ setup_nvidia
 echo ":: Setting up MPD..."
 setup_mpd
 
+# Create user folders
+mkdir /home/$USER/{Code,Games,Media,Misc,Mounts,My}
+
 # Install flatpaks
 echo ":: Installing flatpaks..."
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
@@ -255,6 +287,12 @@ install_flatpaks
 # Setup lm_sensors
 echo ":: Setting up lm_sensors..."
 sudo sensors-detect
+
+# Enable services
+echo ":: Enabling systemctl services..."
+sudo systemctl enable bluetooth
+sudo systemctl enable podman
+sudo systemctl enable ollama
 
 # install Noir Dotfiles
 echo ":: Installing Noir Dotfiles..."
