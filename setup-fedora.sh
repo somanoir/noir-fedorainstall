@@ -17,6 +17,7 @@ packages_common_utils=(
   "uv"
   "golang"
   "rustup"
+  "luarocks"
   "podman"
   "pkgconf-pkg-config"
   "stow"
@@ -126,6 +127,7 @@ packages_apps=(
   "keepassxc"
   "calibre"
   "discord"
+  "filezilla"
   )
 
 packages_fonts=(
@@ -149,6 +151,9 @@ install_misc () {
 
   # Ollama
   curl -fsSL https://ollama.com/install.sh | sh
+
+  # Lain for AwesomeWM
+  sudo luarocks install lain
 }
 
 setup_repos () {
