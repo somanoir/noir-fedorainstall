@@ -23,6 +23,7 @@ packages_common_utils=(
   "stow"
   "nwg_look"
   "zsh"
+  "starship"
   "fzf"
   "zoxide"
   "lsd"
@@ -128,6 +129,7 @@ packages_apps=(
   "calibre"
   "discord"
   "filezilla"
+  "gnome-tweaks"
   )
 
 packages_fonts=(
@@ -143,6 +145,7 @@ install_flatpaks () {
   flatpak install flathub com.valvesoftware.Steam
   flatpak install flathub io.gitlab.librewolf-community
   flatpak install flathub md.obsidian.Obsidian
+  flatpak install flathub com.mattjakeman.ExtensionManager
 }
 
 install_misc () {
@@ -265,6 +268,10 @@ echo ":: Installing fonts..."
 installPackages "${packages_fonts[@]}"
 echo ":: Installing applications..."
 installPackages "${packages_apps[@]}"
+
+# Switch default user shell to Zsh
+echo ":: Switching default user shell to Zsh..."
+sudo chsh -s /usr/bin/zsh $USER
 
 # Setup rust
 rustup-init
