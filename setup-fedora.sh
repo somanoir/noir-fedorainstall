@@ -21,7 +21,7 @@ packages_common_utils=(
   "podman"
   "pkgconf-pkg-config"
   "stow"
-  "nwg_look"
+  "nwg-look"
   "zsh"
   "starship"
   "fzf"
@@ -262,6 +262,7 @@ echo ":: Installing window managers..."
 installPackages "${packages_hyprland[@]}"
 installPackages "${packages_niri[@]}"
 installPackages "${packages_awesome[@]}"
+installPackages "${packages_i3[@]}"
 
 # Install fonts and apps
 echo ":: Installing fonts..."
