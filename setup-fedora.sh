@@ -8,6 +8,7 @@ installPackages() {
 packages_common_utils=(
   "git"
   "git-lfs"
+  "lazygit"
   "wget"
   "unzip"
   "rsync"
@@ -303,6 +304,10 @@ install_flatpaks
 # Setup lm_sensors
 echo ":: Setting up lm_sensors..."
 sudo sensors-detect
+
+# Set right-click dragging to resize windows in GNOME
+echo ":: Setting right-click dragging to resize windows in GNOME..."
+gsettings set org.gnome.desktop.wm.preferences resize-with-right-button true
 
 # Enable services
 echo ":: Enabling systemctl services..."
