@@ -167,6 +167,32 @@ setup_repos () {
   sudo dnf install --nogpgcheck --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' terra-release
 }
 
+install_ags() {
+  sudo dnf install --assumeyes sass
+  sudo dnf install --assumeyes meson vala valadoc gtk3-devel gtk-layer-shell-devel gobject-introspection-devel wayland-protocols-devel
+
+  git clone --depth 1 https://github.com/aylur/astal.git /tmp/astal
+  cd /tmp/astal/lib/astal/io
+  meson setup --prefix /usr build
+  meson install -C build
+
+  cd /tmp/astal/lib/astal/gtk3
+  meson setup --prefix /usr build
+  meson install -C build
+
+  cd /tmp/astal/lang/gjs
+  meson setup --prefix /usr build
+  meson install -C build
+
+  git clone --depth 1 https://github.com/aylur/ags.git /tmp/ags
+  cd /tmp/ags
+  go install -ldflags "\
+      -X 'main.gtk4LayerShell=$(pkg-config --variable=libdir gtk4-layer-shell-0)/libgtk4-layer-shell.so' \
+      -X 'main.astalGjs=$(pkg-config --variable=srcdir astal-gjs)'"
+
+  sudo mv ~/go/bin/ags /usr/bin/ags
+}
+
 install_dotfiles () {
   cd ~
   git clone --depth 1 https://github.com/somanoir/.noir-dotfiles.git
@@ -189,7 +215,7 @@ setup_mpd () {
 }
 
 setup_nvidia () {
-  sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda -y
+  sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda --assumeyes
   sudo dnf mark user akmod-nvidia
 }
 
@@ -250,7 +276,7 @@ sudo hostnamectl set-hostname "$hostname"
 
 # Do an initial update
 echo ":: Updating the system..."
-sudo dnf update -y
+sudo dnf update --assumeyes
 
 # Install required packages
 echo ":: Installing required utilities..."
@@ -301,6 +327,10 @@ mkdir /home/$USER/.local/share/icons
 echo ":: Installing flatpaks..."
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 install_flatpaks
+
+# Install AGS (Astral widgets)
+echo ":: Installing AGS (Astral widgets)..."
+install_ags
 
 # Setup lm_sensors
 echo ":: Setting up lm_sensors..."
