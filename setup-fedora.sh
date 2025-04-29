@@ -295,6 +295,7 @@ setup_mpd
 
 # Create user folders
 mkdir /home/$USER/{Code,Games,Media,Misc,Mounts,My}
+mkdir /home/$USER/.local/share/icons
 
 # Install flatpaks
 echo ":: Installing flatpaks..."
