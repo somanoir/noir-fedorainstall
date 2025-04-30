@@ -154,6 +154,9 @@ install_misc () {
   # RMPC Music player
   cargo install --git https://github.com/mierak/rmpc --locked
 
+  # Wallust color scheme generator
+  cargo install wallust
+
   # Ollama
   curl -fsSL https://ollama.com/install.sh | sh
 
