@@ -344,6 +344,10 @@ sudo sensors-detect
 echo ":: Setting right-click dragging to resize windows in GNOME..."
 gsettings set org.gnome.desktop.wm.preferences resize-with-right-button true
 
+# Update tealdeer cache
+echo ":: # Updating tealdeer cache..."
+tldr --update
+
 # Enable services
 echo ":: Enabling systemctl services..."
 sudo systemctl enable bluetooth
