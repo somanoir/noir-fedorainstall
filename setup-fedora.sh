@@ -48,6 +48,7 @@ packages_common_utils=(
   "tealdeer"
   "ark"
   "umu-launcher"
+  "ncdu"
   )
 
 packages_common_x11=(
