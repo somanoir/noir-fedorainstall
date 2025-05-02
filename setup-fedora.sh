@@ -148,6 +148,7 @@ install_flatpaks () {
   flatpak install flathub io.gitlab.librewolf-community
   flatpak install flathub md.obsidian.Obsidian
   flatpak install flathub com.mattjakeman.ExtensionManager
+  flatpak install flathub com.github.vikdevelop.photopea_app
 }
 
 install_misc () {
