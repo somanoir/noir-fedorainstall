@@ -124,6 +124,7 @@ packages_apps=(
   "thunar-sendto-clamtk"
   "thunar-vcs-plugin"
   "thunar-volman"
+  "dolphin"
   "yazi"
   "ImageMagick"
   "qbittorrent"
