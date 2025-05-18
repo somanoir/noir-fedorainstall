@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Install required packages
 installPackages() {
   for pkg; do
@@ -175,6 +177,20 @@ setup_repos () {
   sudo dnf install --nogpgcheck --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' terra-release
 }
 
+select_window_managers () {
+  IFS=', '
+  read -p ":: Choose window managers to install (hyprland, niri, awesome, i3): " -a array
+  for choice in "${array[@]}"; do
+    case "$choice" in
+      hyprland* ) installPackages "${packages_hyprland[@]}";;
+      niri* ) installPackages "${packages_niri[@]}";;
+      awesome* ) installPackages "${packages_awesome[@]}";;
+      i3* ) installPackages "${packages_i3[@]}";;
+      * ) echo ":: Invalid window manager: $choice";;
+    esac
+  done
+}
+
 install_ags() {
   sudo dnf install --assumeyes sass
   sudo dnf install --assumeyes meson vala valadoc gtk3-devel gtk-layer-shell-devel gobject-introspection-devel wayland-protocols-devel
@@ -204,24 +220,25 @@ install_ags() {
 install_dotfiles () {
   read -p "Would you like to install Noir Dotfiles? (y/n): " answer
   case "$answer" in
-    [Yy]|[Yy][Ee][Ss])
+    [Yy]|[Yy][Ee][Ss] )
       echo ":: Installing Noir Dotfiles..."
 
-      cd ~
+      cd ~ || exit
       git clone --depth 1 https://github.com/somanoir/.noir-dotfiles.git
-      cd .noir-dotfiles
+      cd .noir-dotfiles || exit
       stow .
 
       bat cache --build
       sudo flatpak override --filesystem=xdg-data/themes
 
       return 0;;
-    [Nn]|[Nn][Oo])
+    [Nn]|[Nn][Oo] )
       echo ":: Skipping installation of Noir Dotfiles..."
 
       return 0;;
-    *)
-      return 1
+    * )
+      return 1;;
+  esac
 }
 
 setup_mpd () {
@@ -306,11 +323,7 @@ installPackages "${packages_common_x11[@]}"
 installPackages "${packages_common_wayland[@]}"
 
 # Install window managers
-echo ":: Installing window managers..."
-installPackages "${packages_hyprland[@]}"
-installPackages "${packages_niri[@]}"
-installPackages "${packages_awesome[@]}"
-installPackages "${packages_i3[@]}"
+select_window_managers
 
 # Install fonts and apps
 echo ":: Installing fonts..."
