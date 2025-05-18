@@ -51,7 +51,7 @@ packages_common_utils=(
   "ark"
   "umu-launcher"
   "ncdu"
-  )
+)
 
 packages_common_x11=(
   "gnome-session-xsession"
@@ -66,7 +66,7 @@ packages_common_x11=(
   "dunst"
   "feh"
   "maim"
-  )
+)
 
 packages_common_wayland=(
   "qt5-qtwayland"
@@ -78,7 +78,7 @@ packages_common_wayland=(
   "waybar"
   "mako"
   "swww"
-  )
+)
 
 packages_hyprland=(
   "hyprland"
@@ -93,21 +93,21 @@ packages_hyprland=(
   "aquamarine-devel"
   "pyprland"
   "uwsm"
-  )
+)
 
 packages_niri=(
   "niri"
   "xwayland-satellite"
   "xdg-desktop-portal-gnome"
-  )
+)
 
 packages_awesome=(
   "awesome"
-  )
+)
 
 packages_i3=(
   "i3"
-  )
+)
 
 packages_apps=(
   "ghostty"
@@ -135,16 +135,16 @@ packages_apps=(
   "discord"
   "filezilla"
   "gnome-tweaks"
-  )
+)
 
 packages_fonts=(
   "maple-fonts"
   "nerd-fonts"
   "mozilla-fira-sans-fonts"
   "fontawesome-6-free-fonts"
-  )
+)
 
-install_flatpaks () {
+install_flatpaks() {
   flatpak install flathub com.github.tchx84.Flatseal
   flatpak install flathub de.haeckerfelix.Shortwave
   flatpak install flathub com.valvesoftware.Steam
@@ -154,7 +154,7 @@ install_flatpaks () {
   flatpak install flathub com.github.vikdevelop.photopea_app
 }
 
-install_misc () {
+install_misc() {
   # RMPC Music player
   cargo install --git https://github.com/mierak/rmpc --locked
 
@@ -168,7 +168,7 @@ install_misc () {
   sudo luarocks install lain
 }
 
-setup_repos () {
+setup_repos() {
   sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
   sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1
   sudo dnf copr enable lihaohong/yazi
@@ -177,16 +177,16 @@ setup_repos () {
   sudo dnf install --nogpgcheck --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' terra-release
 }
 
-select_window_managers () {
+select_window_managers() {
   IFS=', '
   read -p ":: Choose window managers to install (hyprland, niri, awesome, i3): " -a array
   for choice in "${array[@]}"; do
     case "$choice" in
-      hyprland* ) installPackages "${packages_hyprland[@]}";;
-      niri* ) installPackages "${packages_niri[@]}";;
-      awesome* ) installPackages "${packages_awesome[@]}";;
-      i3* ) installPackages "${packages_i3[@]}";;
-      * ) echo ":: Invalid window manager: $choice";;
+    hyprland*) installPackages "${packages_hyprland[@]}" ;;
+    niri*) installPackages "${packages_niri[@]}" ;;
+    awesome*) installPackages "${packages_awesome[@]}" ;;
+    i3*) installPackages "${packages_i3[@]}" ;;
+    *) echo ":: Invalid window manager: $choice" ;;
     esac
   done
 }
@@ -217,31 +217,42 @@ install_ags() {
   sudo mv ~/go/bin/ags /usr/bin/ags
 }
 
-install_dotfiles () {
-  read -p "Would you like to install Noir Dotfiles? (y/n): " answer
-  case "$answer" in
-    [Yy]|[Yy][Ee][Ss] )
-      echo ":: Installing Noir Dotfiles..."
+install_dotfiles() {
+  read -p "Would you like to install Noir Dotfiles? (y/n): " answer_dotfiles
+  case "$answer_dotfiles" in
+  [Yy] | [Yy][Ee][Ss])
+    echo ":: Installing Noir Dotfiles..."
+    read -p "Would you like to install Noir Wallpapers? (y/n): " answer_wallpapers
 
-      cd ~ || exit
+    cd ~ || exit
+    case "$answer_wallpapers" in
+    [Yy] | [Yy][Ee][Ss])
+      git clone --depth 1 --recurse-submodules https://github.com/somanoir/.noir-dotfiles.git
+      ;;
+    [Nn] | [Nn][Oo])
       git clone --depth 1 https://github.com/somanoir/.noir-dotfiles.git
-      cd .noir-dotfiles || exit
-      stow .
+      ;;
+    esac
+    cd .noir-dotfiles || exit
+    stow .
 
-      bat cache --build
-      sudo flatpak override --filesystem=xdg-data/themes
+    bat cache --build
+    sudo flatpak override --filesystem=xdg-data/themes
 
-      return 0;;
-    [Nn]|[Nn][Oo] )
-      echo ":: Skipping installation of Noir Dotfiles..."
+    return 0
+    ;;
+  [Nn] | [Nn][Oo])
+    echo ":: Skipping installation of Noir Dotfiles..."
 
-      return 0;;
-    * )
-      return 1;;
+    return 0
+    ;;
+  *)
+    return 1
+    ;;
   esac
 }
 
-setup_mpd () {
+setup_mpd() {
   mkdir ~/.local/share/mpd
   touch ~/.local/share/mpd/database
   mkdir ~/.local/share/mpd/playlists
@@ -252,12 +263,12 @@ setup_mpd () {
   mpc update
 }
 
-setup_nvidia () {
+setup_nvidia() {
   sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda --assumeyes
   sudo dnf mark user akmod-nvidia
 }
 
-setup_multimedia () {
+setup_multimedia() {
   # Switch to full ffmpeg
   sudo dnf swap ffmpeg-free ffmpeg --allowerasing
 
@@ -278,7 +289,6 @@ setup_multimedia () {
   sudo dnf install rpmfusion-nonfree-release-tainted
   sudo dnf --repo=rpmfusion-nonfree-tainted install "*-firmware"
 }
-
 
 # Setup extra repos
 echo ":: Setting up repositories..."
@@ -387,4 +397,4 @@ sudo systemctl enable podman
 sudo systemctl enable ollama
 
 # Install Noir Dotfiles
-until install_dotfiles; do : ; done
+until install_dotfiles; do :; done
