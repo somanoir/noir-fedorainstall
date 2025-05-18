@@ -201,13 +201,26 @@ install_ags() {
 }
 
 install_dotfiles () {
-  cd ~
-  git clone --depth 1 https://github.com/somanoir/.noir-dotfiles.git
-  cd .noir-dotfiles
-  stow .
+  read -p "Would you like to install Noir Dotfiles? (y/n): " answer
+  case "$answer" in
+    [Yy]|[Yy][Ee][Ss])
+      echo ":: Installing Noir Dotfiles..."
 
-  bat cache --build
-  sudo flatpak override --filesystem=xdg-data/themes
+      cd ~
+      git clone --depth 1 https://github.com/somanoir/.noir-dotfiles.git
+      cd .noir-dotfiles
+      stow .
+
+      bat cache --build
+      sudo flatpak override --filesystem=xdg-data/themes
+
+      return 0;;
+    [Nn]|[Nn][Oo])
+      echo ":: Skipping installation of Noir Dotfiles..."
+
+      return 0;;
+    *)
+      return 1
 }
 
 setup_mpd () {
@@ -359,6 +372,5 @@ sudo systemctl enable bluetooth
 sudo systemctl enable podman
 sudo systemctl enable ollama
 
-# install Noir Dotfiles
-echo ":: Installing Noir Dotfiles..."
-install_dotfiles
+# Install Noir Dotfiles
+until install_dotfiles; do : ; done
