@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Install required packages
-installPackages() {
+install_packages() {
   for pkg; do
     sudo dnf install --assumeyes "${pkg}"
   done
@@ -144,14 +144,33 @@ packages_fonts=(
   "fontawesome-6-free-fonts"
 )
 
-install_flatpaks() {
-  flatpak install flathub com.github.tchx84.Flatseal
-  flatpak install flathub de.haeckerfelix.Shortwave
-  flatpak install flathub com.valvesoftware.Steam
-  flatpak install flathub io.gitlab.librewolf-community
-  flatpak install flathub md.obsidian.Obsidian
-  flatpak install flathub com.mattjakeman.ExtensionManager
-  flatpak install flathub com.github.vikdevelop.photopea_app
+packages_gaming=(
+  "steam"
+  "lutris"
+  "umu-launcher"
+)
+
+setup_repos() {
+  sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm --assumeyes
+  sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1
+  sudo dnf copr enable lihaohong/yazi --assumeyes
+  sudo dnf copr enable yalter/niri --assumeyes
+  sudo dnf copr enable solopasha/hyprland --assumeyes
+  sudo dnf install --nogpgcheck --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' terra-release --assumeyes
+}
+
+select_window_managers() {
+  IFS=', '
+  read -p "→ Choose window managers to install (hyprland, niri, awesome, i3): " -a array
+  for choice in "${array[@]}"; do
+    case "$choice" in
+    hyprland*) install_packages "${packages_hyprland[@]}" ;;
+    niri*) install_packages "${packages_niri[@]}" ;;
+    awesome*) install_packages "${packages_awesome[@]}" ;;
+    i3*) install_packages "${packages_i3[@]}" ;;
+    *) echo "→ Invalid window manager: $choice" ;;
+    esac
+  done
 }
 
 install_misc() {
@@ -168,27 +187,62 @@ install_misc() {
   sudo luarocks install lain
 }
 
-setup_repos() {
-  sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-  sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1
-  sudo dnf copr enable lihaohong/yazi
-  sudo dnf copr enable yalter/niri
-  sudo dnf copr enable solopasha/hyprland
-  sudo dnf install --nogpgcheck --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' terra-release
+setup_multimedia() {
+  # Switch to full ffmpeg
+  sudo dnf swap ffmpeg-free ffmpeg --allowerasing --assumeyes
+
+  # Install additional codec
+  sudo dnf update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin --assumeyes
+
+  # Hardware Accelerated Codec
+  sudo dnf install intel-media-driver --assumeyes
+
+  # Hardware codecs with NVIDIA
+  sudo dnf install libva-nvidia-driver.{i686,x86_64} --assumeyes
+
+  # Play a DVD
+  sudo dnf install rpmfusion-free-release-tainted --assumeyes
+  sudo dnf install libdvdcss --assumeyes
+
+  # Various firmwares
+  sudo dnf install rpmfusion-nonfree-release-tainted --assumeyes
+  sudo dnf --repo=rpmfusion-nonfree-tainted install "*-firmware" --assumeyes
 }
 
-select_window_managers() {
-  IFS=', '
-  read -p ":: Choose window managers to install (hyprland, niri, awesome, i3): " -a array
-  for choice in "${array[@]}"; do
-    case "$choice" in
-    hyprland*) installPackages "${packages_hyprland[@]}" ;;
-    niri*) installPackages "${packages_niri[@]}" ;;
-    awesome*) installPackages "${packages_awesome[@]}" ;;
-    i3*) installPackages "${packages_i3[@]}" ;;
-    *) echo ":: Invalid window manager: $choice" ;;
-    esac
-  done
+setup_nvidia() {
+  sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda --assumeyes
+  sudo dnf mark user akmod-nvidia
+}
+
+install_gaming_tools() {
+  read -p "Would you like to install gaming tools? (y/n): " answer
+  case "$answer" in
+  [Yy] | [Yy][Ee][Ss])
+    echo "→ Installing gaming tools..."
+    install_packages "${packages_gaming[@]}"
+    ;;
+  *) echo "→ Skipping installation of gaming tools..." ;;
+  esac
+}
+
+setup_mpd() {
+  mkdir ~/.local/share/mpd
+  touch ~/.local/share/mpd/database
+  mkdir ~/.local/share/mpd/playlists
+  touch ~/.local/share/mpd/state
+  touch ~/.local/share/mpd/sticker.sql
+
+  systemctl --user enable --now mpd.service
+  mpc update
+}
+
+install_flatpaks() {
+  flatpak install flathub com.github.tchx84.Flatseal --assumeyes
+  flatpak install flathub de.haeckerfelix.Shortwave --assumeyes
+  flatpak install flathub io.gitlab.librewolf-community --assumeyes
+  flatpak install flathub md.obsidian.Obsidian --assumeyes
+  flatpak install flathub com.mattjakeman.ExtensionManager --assumeyes
+  flatpak install flathub com.github.vikdevelop.photopea_app --assumeyes
 }
 
 install_ags() {
@@ -221,7 +275,7 @@ install_dotfiles() {
   read -p "Would you like to install Noir Dotfiles? (y/n): " answer_dotfiles
   case "$answer_dotfiles" in
   [Yy] | [Yy][Ee][Ss])
-    echo ":: Installing Noir Dotfiles..."
+    echo "→ Installing Noir Dotfiles..."
     read -p "Would you like to install Noir Wallpapers? (y/n): " answer_wallpapers
 
     cd ~ || exit
@@ -242,7 +296,7 @@ install_dotfiles() {
     return 0
     ;;
   [Nn] | [Nn][Oo])
-    echo ":: Skipping installation of Noir Dotfiles..."
+    echo "→ Skipping installation of Noir Dotfiles..."
 
     return 0
     ;;
@@ -252,46 +306,14 @@ install_dotfiles() {
   esac
 }
 
-setup_mpd() {
-  mkdir ~/.local/share/mpd
-  touch ~/.local/share/mpd/database
-  mkdir ~/.local/share/mpd/playlists
-  touch ~/.local/share/mpd/state
-  touch ~/.local/share/mpd/sticker.sql
-
-  systemctl --user enable --now mpd.service
-  mpc update
-}
-
-setup_nvidia() {
-  sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda --assumeyes
-  sudo dnf mark user akmod-nvidia
-}
-
-setup_multimedia() {
-  # Switch to full ffmpeg
-  sudo dnf swap ffmpeg-free ffmpeg --allowerasing
-
-  # Install additional codec
-  sudo dnf update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
-
-  # Hardware Accelerated Codec
-  sudo dnf install intel-media-driver
-
-  # Hardware codecs with NVIDIA
-  sudo dnf install libva-nvidia-driver.{i686,x86_64}
-
-  # Play a DVD
-  sudo dnf install rpmfusion-free-release-tainted
-  sudo dnf install libdvdcss
-
-  # Various firmwares
-  sudo dnf install rpmfusion-nonfree-release-tainted
-  sudo dnf --repo=rpmfusion-nonfree-tainted install "*-firmware"
-}
+# Create user folders
+mkdir /home/$USER/{Code,Games,Media,Misc,Mounts,My}
+mkdir /home/$USER/.local/bin
+mkdir /home/$USER/.local/share/backgrounds
+mkdir /home/$USER/.local/share/icons
 
 # Setup extra repos
-echo ":: Setting up repositories..."
+echo "→ Setting up repositories..."
 setup_repos
 
 # Tweak DNF config
@@ -317,33 +339,29 @@ sudo -i -u root /bin/bash <<EOF
   echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel
 EOF
 
-# Change Hostname
-echo "Please enter Hostname for your machine: "
-read -r hostname
-sudo hostnamectl set-hostname "$hostname"
-
 # Do an initial update
-echo ":: Updating the system..."
+echo "→ Updating the system..."
 sudo dnf update --assumeyes
 
 # Install required packages
-echo ":: Installing required utilities..."
-installPackages "${packages_common_utils[@]}"
-installPackages "${packages_common_x11[@]}"
-installPackages "${packages_common_wayland[@]}"
+echo "→ Installing required utilities..."
+install_packages "${packages_common_utils[@]}"
+install_packages "${packages_common_x11[@]}"
+install_packages "${packages_common_wayland[@]}"
 
 # Install window managers
 select_window_managers
 
 # Install fonts and apps
-echo ":: Installing fonts..."
-installPackages "${packages_fonts[@]}"
-echo ":: Installing applications..."
-installPackages "${packages_apps[@]}"
+echo "→ Installing fonts..."
+install_packages "${packages_fonts[@]}"
+echo "→ Installing applications..."
+install_packages "${packages_apps[@]}"
 
-# Switch default user shell to Zsh
-echo ":: Switching default user shell to Zsh..."
+# Switch user and root shell to Zsh
+echo "→ Switching user and root shell to Zsh..."
 sudo chsh -s /usr/bin/zsh $USER
+sudo chsh -s /usr/bin/zsh root
 
 # Setup rust
 rustup-init
@@ -352,46 +370,43 @@ rustup-init
 install_misc
 
 # Setup multimedia
-echo ":: Setting up multimedia codecs..."
+echo "→ Setting up multimedia codecs..."
 setup_multimedia
 
 # Setup Nvidia drivers
-echo ":: Setting up Nvidia drivers..."
+echo "→ Setting up Nvidia drivers..."
 setup_nvidia
 
+# Install gaming tools
+install_gaming_tools
+
 # Setup mandatory mpd folders and files
-echo ":: Setting up MPD..."
+echo "→ Setting up MPD..."
 setup_mpd
 
-# Create user folders
-mkdir /home/$USER/{Code,Games,Media,Misc,Mounts,My}
-mkdir /home/$USER/.local/bin
-mkdir /home/$USER/.local/share/backgrounds
-mkdir /home/$USER/.local/share/icons
-
 # Install flatpaks
-echo ":: Installing flatpaks..."
-flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+echo "→ Installing flatpaks..."
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo --assumeyes
 install_flatpaks
 
 # Install AGS (Astral widgets)
-echo ":: Installing AGS (Astral widgets)..."
+echo "→ Installing AGS (Astral widgets)..."
 install_ags
 
 # Setup lm_sensors
-echo ":: Setting up lm_sensors..."
+echo "→ Setting up lm_sensors..."
 sudo sensors-detect
 
 # Set right-click dragging to resize windows in GNOME
-echo ":: Setting right-click dragging to resize windows in GNOME..."
+echo "→ Setting right-click dragging to resize windows in GNOME..."
 gsettings set org.gnome.desktop.wm.preferences resize-with-right-button true
 
 # Update tealdeer cache
-echo ":: # Updating tealdeer cache..."
+echo "→ # Updating tealdeer cache..."
 tldr --update
 
 # Enable services
-echo ":: Enabling systemctl services..."
+echo "→ Enabling systemctl services..."
 sudo systemctl enable bluetooth
 sudo systemctl enable podman
 sudo systemctl enable ollama
