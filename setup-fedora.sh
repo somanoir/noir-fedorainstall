@@ -51,6 +51,7 @@ packages_common_utils=(
   "ark"
   "umu-launcher"
   "ncdu"
+  "dkms"
 )
 
 packages_common_x11=(
