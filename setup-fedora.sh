@@ -133,6 +133,7 @@ packages_apps=(
   "qbittorrent"
   "keepassxc"
   "calibre"
+  "foliate"
   "discord"
   "filezilla"
   "gnome-tweaks"
