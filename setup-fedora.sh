@@ -44,12 +44,10 @@ packages_common_utils=(
   "fastfetch"
   "bluez"
   "blueman"
-  "lm_sensors"
   "yt-dlp"
   "tela-icon-theme"
   "tealdeer"
   "ark"
-  "umu-launcher"
   "ncdu"
   "dkms"
 )
@@ -67,6 +65,7 @@ packages_common_x11=(
   "dunst"
   "feh"
   "maim"
+  "picom"
 )
 
 packages_common_wayland=(
@@ -308,11 +307,23 @@ install_dotfiles() {
   esac
 }
 
+
+clear
+
+cat <<"EOF"
+  ______       _                    _____      _
+ |  ____|     | |                  / ____|    | |
+ | |__ ___  __| | ___  _ __ __ _  | (___   ___| |_ _   _ _ __
+ |  __/ _ \/ _` |/ _ \| '__/ _` |  \___ \ / _ \ __| | | | '_ \
+ | | |  __/ (_| | (_) | | | (_| |  ____) |  __/ |_| |_| | |_) |
+ |_|  \___|\__,_|\___/|_|  \__,_| |_____/ \___|\__|\__,_| .__/
+                                                        | |
+                                                        |_|
+EOF
+
 # Create user folders
 mkdir /home/$USER/{Code,Games,Media,Misc,Mounts,My}
-mkdir /home/$USER/.local/bin
-mkdir /home/$USER/.local/share/backgrounds
-mkdir /home/$USER/.local/share/icons
+mkdir -p /home/$USER/.local/{bin,share/backgrounds,share/icons}
 
 # Setup extra repos
 echo "→ Setting up repositories..."
@@ -328,6 +339,7 @@ skip_if_unavailable=True" >> /etc/dnf/dnf.conf
 EOF
 
 # Fix laptop lid acting like airplane mode key
+echo "→ Fixing laptop lid acting like airplane mode key..."
 sudo -i -u root /bin/bash <<EOF
 mkdir /etc/rc.d
 echo "#!/usr/bin/env bash
@@ -391,20 +403,16 @@ echo "→ Installing flatpaks..."
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo --assumeyes
 install_flatpaks
 
-# Install AGS (Astral widgets)
-echo "→ Installing AGS (Astral widgets)..."
+# Install AGS (Astal widgets)
+echo "→ Installing AGS (Astal widgets)..."
 install_ags
-
-# Setup lm_sensors
-echo "→ Setting up lm_sensors..."
-sudo sensors-detect
 
 # Set right-click dragging to resize windows in GNOME
 echo "→ Setting right-click dragging to resize windows in GNOME..."
 gsettings set org.gnome.desktop.wm.preferences resize-with-right-button true
 
 # Update tealdeer cache
-echo "→ # Updating tealdeer cache..."
+echo "→ Updating tealdeer cache..."
 tldr --update
 
 # Enable services
