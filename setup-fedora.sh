@@ -198,9 +198,6 @@ setup_multimedia() {
   # Hardware Accelerated Codec
   sudo dnf install intel-media-driver --assumeyes
 
-  # Hardware codecs with NVIDIA
-  sudo dnf install libva-nvidia-driver.{i686,x86_64} --assumeyes
-
   # Play a DVD
   sudo dnf install rpmfusion-free-release-tainted --assumeyes
   sudo dnf install libdvdcss --assumeyes
@@ -210,9 +207,20 @@ setup_multimedia() {
   sudo dnf --repo=rpmfusion-nonfree-tainted install "*-firmware" --assumeyes
 }
 
-setup_nvidia() {
-  sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda --assumeyes
-  sudo dnf mark user akmod-nvidia
+install_nvidia_drivers() {
+  read -p "Would you like to install Nvidia drivers? (y/n): " answer
+  case "$answer" in
+  [Yy] | [Yy][Ee][Ss])
+    echo "→ Installing Nvidia drivers..."
+    # Hardware codecs with NVIDIA
+    sudo dnf install libva-nvidia-driver.{i686,x86_64} --assumeyes
+    # NVIDIA drivers
+    sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda --assumeyes
+    sudo dnf mark user akmod-nvidia
+
+    ;;
+  *) echo "→ Skipping installation of Nvidia drivers..." ;;
+  esac
 }
 
 install_gaming_tools() {
@@ -307,7 +315,6 @@ install_dotfiles() {
   esac
 }
 
-
 clear
 
 cat <<"EOF"
@@ -388,8 +395,7 @@ echo "→ Setting up multimedia codecs..."
 setup_multimedia
 
 # Setup Nvidia drivers
-echo "→ Setting up Nvidia drivers..."
-setup_nvidia
+install_nvidia_drivers
 
 # Install gaming tools
 install_gaming_tools
